@@ -7,23 +7,27 @@ import threading
 sg.theme("DarkGrey10")
 end = False
 def get_image(window):
+    global end
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.bind(("192.168.0.100",1337))
     s.listen()
     print("server iniciado")
+    client, addr = s.accept()
+    print(f"Conexão: {addr}")
     while True:
-        if end == True:
-            s.close()
-            break
-        client, addr = s.accept()
-        print(f"Conexão: {addr}")
         img_bytes = io.BytesIO()
         with img_bytes as f:
             while True:
                 data = client.recv(1024)
-                f.write(data)
-                if not data:
+                if data == b"":
+                    end = True
                     break
+                f.write(data)
+                if data.endswith(b"EOF"):
+                    break
+            if end == True:
+                client.close()
+                break
             im = Image.open(io.BytesIO(img_bytes.getvalue()))
             im.thumbnail((1024,576))
             img_bytes2 = io.BytesIO()
