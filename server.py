@@ -1,7 +1,6 @@
 import socket
 import io
 import PySimpleGUI as sg
-from PIL import Image
 import threading
 
 sg.theme("DarkGrey10")
@@ -9,14 +8,14 @@ end = False
 def get_image(window):
     global end
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    s.bind(("192.168.0.100",1337))
+    s.bind(("127.0.0.1",6969))
     s.listen()
     print("server iniciado")
     client, addr = s.accept()
     print(f"Conexão: {addr}")
     while True:
-        img_bytes = io.BytesIO()
-        with img_bytes as f:
+        recv_bytes = io.BytesIO()
+        with recv_bytes as f:
             while True:
                 data = client.recv(1024)
                 if data == b"":
@@ -28,11 +27,7 @@ def get_image(window):
             if end == True:
                 client.close()
                 break
-            im = Image.open(io.BytesIO(img_bytes.getvalue()))
-            im.thumbnail((1024,576))
-            img_bytes2 = io.BytesIO()
-            im.save(img_bytes2,"PPM")
-            window["img"].update(data=img_bytes2.getvalue())
+            window["img"].update(data=recv_bytes.getvalue())
     print("acabou")
 
 layout = [
